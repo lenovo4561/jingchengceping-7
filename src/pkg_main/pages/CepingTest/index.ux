@@ -150,6 +150,7 @@
 <script>
 import router from '@system.router'
 import { xinggeQuestions, qingganQuestions, shiyeQuestions, quweiQuestions } from './../../helper/ceping_questions.js'
+import { getTestResult } from './../../helper/ceping_results_simple.js'
 
 export default {
   data() {
@@ -255,23 +256,16 @@ export default {
     }, 500)
   },
   calculateResult() {
-    // 根据总分计算结果
+    // 根据总分和测评ID计算结果
     const maxScore = this.totalQuestions * 2
-    const percentage = this.totalScore / maxScore
+    const numId = parseInt(this.id, 10)
     
-    if (percentage >= 0.75) {
-      this.resultTitle = '极致外向型——社交场上的活力源泉'
-      this.resultContent = '你是典型的外向型人格，精力来源于与他人的互动。社交对你而言不是负担，而是补充能量的方式，无论是大型聚会还是陌生社交场景，你都能快速适应并展现出强大的沟通能力。在团队中，你是天然的带动者，主动发言和积极建议能有效调动团队氛围，推动任务进展。面对压力时，你习惯通过外部活动释放情绪，身边从不缺乏朋友和陪伴。但需注意，过度依赖社交可能会让你忽略内心真实感受，偶尔的独处能帮助你沉淀思绪。在工作中，可充分发挥社交优势拓展资源，但也要学会在团队中倾听他人意见，避免因过于主动而忽视细节。'
-    } else if (percentage >= 0.5) {
-      this.resultTitle = '社交适应型——灵活切换的平衡者'
-      this.resultContent = '你具有良好的社交适应能力，能够在不同场合灵活调整自己的状态。既能享受热闹的聚会，也能安静地独处思考。这种平衡让你在人际交往中游刃有余，既不会因过度社交而疲惫，也不会因过度独处而孤独。建议继续保持这种平衡，根据实际需要调整社交频率。'
-    } else if (percentage >= 0.25) {
-      this.resultTitle = '内敛思考型——深度交流的倾听者'
-      this.resultContent = '你更倾向于内向，喜欢深度的一对一交流而非大型社交活动。独处对你来说是恢复精力的重要方式。你善于倾听和思考，往往能给出深思熟虑的建议。在工作中，你可能更适合需要专注和深度思考的任务。建议在保持舒适区的同时，适当挑战自己参与一些社交活动，拓展人脉资源。'
-    } else {
-      this.resultTitle = '深度内向型——独立思考的智者'
-      this.resultContent = '你是典型的内向型人格，独处是你最舒适的状态。你拥有丰富的内心世界，善于深度思考和自我反省。社交活动对你来说消耗较大，你更喜欢与少数知心好友保持深度联系。在工作中，你适合需要独立完成、深度专注的任务。建议尊重自己的性格特点，同时培养一些必要的社交技能，以应对职场和生活中的社交需求。'
-    }
+    console.info('calculateResult - id:', numId, 'totalScore:', this.totalScore, 'maxScore:', maxScore)
+    
+    // 使用新的结果函数
+    const result = getTestResult(numId, this.totalScore, maxScore)
+    this.resultTitle = result.title
+    this.resultContent = result.content
   },
   viewResult() {
     this.showResult = true
