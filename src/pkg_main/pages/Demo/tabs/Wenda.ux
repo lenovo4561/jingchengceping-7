@@ -1,0 +1,269 @@
+<template>
+  <div class="container">
+    <!-- 背景图 -->
+    <image class="bg-image" src="/pkg_main/assets/imgs/shouye-bg-1.png"></image>
+    
+    <!-- 页面标题 -->
+    <text class="page-title">知识问答</text>
+    
+    <!-- 问答卡片 -->
+    <div class="card">
+      <!-- 顶部信息 -->
+      <div class="header">
+        <div class="question-index">
+          <text class="index-label">第</text>
+          <text class="index-num">{{currentIndex + 1}}</text>
+          <text class="index-label">题</text>
+        </div>
+        <text class="score-text">正确题数: {{correctCount}}</text>
+      </div>
+      
+      <!-- 题目内容 -->
+      <div class="content-area" if="{{currentQuestion}}">
+        <text class="question-text">{{currentQuestion.question}}</text>
+        
+        <!-- 选项列表 -->
+        <div class="options-list">
+          <div class="option-item {{getOptionClass(item)}}" for="{{item in currentQuestion.options}}" onclick="selectOption(item)">
+            <text class="option-text">{{item.label}}. {{item.text}}</text>
+          </div>
+        </div>
+        
+        <!-- 结果解析 -->
+        <div class="result-area" if="{{showResult}}">
+          <text class="answer-text">答案: {{currentQuestion.answer}}</text>
+          <text class="explanation-text">解析:{{currentQuestion.explanation}}</text>
+          
+          <div class="next-btn" onclick="nextQuestion">
+            <text class="btn-text">{{isLastQuestion ? '完成' : '下一题'}}</text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { wendaQuestions } from './../../../helper/wenda_data.js'
+import prompt from '@system.prompt'
+
+export default {
+  props: ['show'],
+  data() {
+    return {
+      questions: wendaQuestions,
+      currentIndex: 0,
+      correctCount: 0,
+      selectedOption: null,
+      showResult: false
+    }
+  },
+  computed: {
+    currentQuestion() {
+      return this.questions[this.currentIndex]
+    },
+    isLastQuestion() {
+      return this.currentIndex === this.questions.length - 1
+    }
+  },
+  onInit() {
+    // 初始化
+  },
+  getOptionClass(item) {
+    if (!this.showResult) {
+      // 未选择时
+      return ''
+    }
+    // 已选择，显示结果
+    if (item.label === this.currentQuestion.answer) {
+      return 'option-correct' // 正确答案显示绿色/青色
+    }
+    if (this.selectedOption && item.label === this.selectedOption.label && item.label !== this.currentQuestion.answer) {
+      return 'option-wrong' // 选错的显示红色
+    }
+    return ''
+  },
+  selectOption(item) {
+    if (this.showResult) return // 已选过，不能再选
+    
+    this.selectedOption = item
+    this.showResult = true
+    
+    if (item.label === this.currentQuestion.answer) {
+      this.correctCount++
+    }
+  },
+  nextQuestion() {
+    if (this.isLastQuestion) {
+      prompt.showToast({
+        message: '答题结束，共答对 ' + this.correctCount + ' 题'
+      })
+      // 重置或者跳转
+      this.currentIndex = 0
+      this.correctCount = 0
+      this.showResult = false
+      this.selectedOption = null
+      return
+    }
+    
+    this.currentIndex++
+    this.showResult = false
+    this.selectedOption = null
+  }
+}
+</script>
+
+<style lang="scss">
+@import './../../../assets/styles/style.scss';
+
+.container {
+  flex: 1;
+  flex-direction: column;
+  background-color: #f5f5f5;
+}
+
+.bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 280 * $size-factor;
+  object-fit: cover;
+}
+
+.page-title {
+  font-size: 18 * $size-factor;
+  color: #000000;
+  font-weight: bold;
+  margin-top: 40 * $size-factor;
+  align-self: center;
+  z-index: 1;
+}
+
+.card {
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.95);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), #ffffff 30%);
+  position: absolute;
+  top: 100 * $size-factor;
+  left: 10 * $size-factor;
+  right: 10 * $size-factor;
+  border-radius: 15 * $size-factor;
+  padding: 20 * $size-factor;
+  elevation: 5px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 15 * $size-factor;
+}
+
+.question-index {
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.index-label {
+  font-size: 12 * $size-factor;
+  color: #999999;
+  margin-bottom: 2 * $size-factor;
+}
+
+.index-num {
+  font-size: 20 * $size-factor;
+  color: #000000;
+  font-weight: bold;
+  margin-left: 2 * $size-factor;
+  margin-right: 2 * $size-factor;
+}
+
+.score-text {
+  font-size: 12 * $size-factor;
+  color: #00bcd4;
+}
+
+.content-area {
+  flex-direction: column;
+}
+
+.question-text {
+  font-size: 16 * $size-factor;
+  color: #333333;
+  margin-bottom: 20 * $size-factor;
+  line-height: 24 * $size-factor;
+}
+
+.options-list {
+  flex-direction: column;
+}
+
+.option-item {
+  background-color: #ffffff;
+  border-radius: 8 * $size-factor;
+  padding: 12 * $size-factor;
+  margin-bottom: 10 * $size-factor;
+  border: 1px solid #eeeeee;
+}
+
+.option-text {
+  font-size: 14 * $size-factor;
+  color: #333333;
+}
+
+.option-correct {
+  background-color: #e0f7fa;
+  border-color: #00bcd4;
+  
+  .option-text {
+    color: #00bcd4;
+  }
+}
+
+.option-wrong {
+  background-color: #ffebee;
+  border-color: #ef5350;
+  
+  .option-text {
+    color: #ef5350;
+  }
+}
+
+.result-area {
+  flex-direction: column;
+  margin-top: 10 * $size-factor;
+  border-top-width: 1px;
+  border-top-color: #eeeeee;
+  padding-top: 15 * $size-factor;
+}
+
+.answer-text {
+  font-size: 14 * $size-factor;
+  color: #333333;
+  font-weight: bold;
+  margin-bottom: 5 * $size-factor;
+}
+
+.explanation-text {
+  font-size: 12 * $size-factor;
+  color: #666666;
+  line-height: 18 * $size-factor;
+  margin-bottom: 20 * $size-factor;
+}
+
+.next-btn {
+  height: 40 * $size-factor;
+  background-color: #00bcd4;
+  border-radius: 20 * $size-factor;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-text {
+  color: #ffffff;
+  font-size: 16 * $size-factor;
+  font-weight: bold;
+}
+</style>

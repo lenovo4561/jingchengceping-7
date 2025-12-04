@@ -1,0 +1,563 @@
+<template>
+  <div class="container">
+    <!-- 背景图 -->
+    <image class="bg-img" src="/pkg_main/assets/imgs/shouye-bg.png"></image>
+    
+    <!-- 自定义导航栏 -->
+    <div class="custom-title-bar">
+      <div class="back-btn" onclick="goBack">
+        <image class="back-icon" src="/pkg_main/assets/imgs/back.png"></image>
+      </div>
+      <image class="title-icon" src="/pkg_main/assets/imgs/loading-icon.png"></image>
+      <text class="page-title">{{title}}</text>
+    </div>
+    
+    <!-- 对话内容区域 -->
+    <list class="chat-list">
+      <!-- 测评标题气泡 -->
+      <list-item type="title" class="chat-item">
+        <div class="bubble-row bubble-row-left">
+          <image class="avatar" src="/pkg_main/assets/imgs/loading-icon.png"></image>
+          <div class="bubble left-bubble">
+            <text class="bubble-text">{{title}}</text>
+          </div>
+        </div>
+      </list-item>
+      
+      <!-- 开始测评按钮（用户点击后的回复） -->
+      <list-item type="start" class="chat-item" if="{{started}}">
+        <div class="bubble-row bubble-row-right">
+          <div class="bubble right-bubble">
+            <text class="bubble-text bubble-text-white">开始测评</text>
+          </div>
+          <image class="avatar" src="/pkg_main/assets/imgs/b.png"></image>
+        </div>
+      </list-item>
+      
+      <!-- 已回答的题目列表 -->
+      <list-item type="answered" class="chat-item" for="{{answeredQuestions}}">
+        <!-- 题目进度 -->
+        <div class="progress-row">
+          <text class="progress-text">第{{$item.index}}题</text>
+          <text class="progress-total"> / 共{{totalQuestions}}题</text>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="width: {{$item.index / totalQuestions * 100}}%"></div>
+        </div>
+        
+        <!-- 题目气泡 -->
+        <div class="bubble-row bubble-row-left">
+          <image class="avatar" src="/pkg_main/assets/imgs/loading-icon.png"></image>
+          <div class="bubble left-bubble question-bubble">
+            <text class="bubble-text">{{$item.question}}</text>
+          </div>
+        </div>
+        
+        <!-- 选项卡片 -->
+        <div class="options-container">
+          <div class="option-card {{$item.selectedOption === opt.label ? 'option-card-selected' : ''}}" 
+               for="{{(optIdx, opt) in $item.options}}">
+            <text class="option-label">{{opt.label}}.</text>
+            <text class="option-text">{{opt.text}}</text>
+          </div>
+        </div>
+        
+        <!-- 用户选择的答案 -->
+        <div class="bubble-row bubble-row-right" if="{{$item.selectedOption}}">
+          <div class="bubble right-bubble">
+            <text class="bubble-text bubble-text-white">选择{{$item.selectedOption}}</text>
+          </div>
+          <image class="avatar" src="/pkg_main/assets/imgs/b.png"></image>
+        </div>
+      </list-item>
+      
+      <!-- 当前题目 -->
+      <list-item type="current" class="chat-item" if="{{started && currentQuestion && !finished}}">
+        <!-- 题目进度 -->
+        <div class="progress-row">
+          <text class="progress-text">第{{currentIndex + 1}}题</text>
+          <text class="progress-total"> / 共{{totalQuestions}}题</text>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="width: {{(currentIndex + 1) / totalQuestions * 100}}%"></div>
+        </div>
+        
+        <!-- 题目气泡 -->
+        <div class="bubble-row bubble-row-left">
+          <image class="avatar" src="/pkg_main/assets/imgs/loading-icon.png"></image>
+          <div class="bubble left-bubble question-bubble">
+            <text class="bubble-text">{{currentQuestion.question}}</text>
+          </div>
+        </div>
+        
+        <!-- 选项卡片 -->
+        <div class="options-container">
+          <div class="option-card {{selectedOption === opt.label ? 'option-card-selected' : ''}}" 
+               for="{{(optIdx, opt) in currentQuestion.options}}"
+               onclick="selectOption(opt)">
+            <text class="option-label">{{opt.label}}.</text>
+            <text class="option-text">{{opt.text}}</text>
+          </div>
+        </div>
+      </list-item>
+      
+      <!-- 完成提示 -->
+      <list-item type="finish" class="chat-item" if="{{finished}}">
+        <div class="bubble-row bubble-row-left">
+          <image class="avatar" src="/pkg_main/assets/imgs/loading-icon.png"></image>
+          <div class="bubble left-bubble">
+            <text class="bubble-text">题目已全部答完，点击下方查看结论吧</text>
+          </div>
+        </div>
+      </list-item>
+      
+      <!-- 结果展示 -->
+      <list-item type="result" class="chat-item" if="{{showResult}}">
+        <div class="result-container">
+          <text class="result-title">{{resultTitle}}</text>
+          <text class="result-content">{{resultContent}}</text>
+        </div>
+      </list-item>
+      
+      <!-- 底部留白 -->
+      <list-item type="placeholder" class="placeholder-item"></list-item>
+    </list>
+    
+    <!-- 底部按钮 -->
+    <div class="bottom-btn-wrap" if="{{!started}}">
+      <div class="action-btn" onclick="startTest">
+        <text class="btn-text">开始测评</text>
+      </div>
+    </div>
+    
+    <div class="bottom-btn-wrap" if="{{finished && !showResult}}">
+      <div class="action-btn" onclick="viewResult">
+        <text class="btn-text">查看结论</text>
+      </div>
+    </div>
+    
+    <div class="bottom-btn-wrap bottom-btn-wrap-row" if="{{showResult}}">
+      <div class="action-btn result-action-btn action-btn-secondary" onclick="retryTest">
+        <text class="btn-text">再测一次</text>
+      </div>
+      <div class="action-btn result-action-btn action-btn-primary" onclick="goHome">
+        <text class="btn-text">返回首页</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+import { xinggeQuestions, qingganQuestions, shiyeQuestions, quweiQuestions } from './../../helper/ceping_questions.js'
+
+export default {
+  data() {
+    return {
+      id: 0,
+      title: '',
+      tag: '',
+      type: '',
+      started: false,
+      finished: false,
+      showResult: false,
+      questions: [],
+      currentIndex: 0,
+      currentQuestion: null,
+      selectedOption: '',
+      answeredQuestions: [],
+      totalQuestions: 0,
+      totalScore: 0,
+      resultTitle: '',
+      resultContent: ''
+    }
+  },
+  onInit() {
+    this.loadQuestions()
+  },
+  loadQuestions() {
+    // 根据type加载对应的题目
+    let questionData = null
+    switch(this.type) {
+      case 'xingge':
+        questionData = xinggeQuestions
+        break
+      case 'qinggan':
+        questionData = qingganQuestions
+        break
+      case 'shiye':
+        questionData = shiyeQuestions
+        break
+      case 'quwei':
+        questionData = quweiQuestions
+        break
+      default:
+        questionData = xinggeQuestions
+    }
+    
+    // 获取对应id的题目（转换为数字类型）
+    const numId = parseInt(this.id, 10)
+    console.info('loadQuestions - type:', this.type, 'id:', this.id, 'numId:', numId)
+    
+    if (questionData && questionData[numId]) {
+      this.questions = questionData[numId]
+      this.totalQuestions = this.questions.length
+      console.info('Loaded questions count:', this.totalQuestions)
+    } else {
+      // 默认使用第一套题
+      const keys = Object.keys(questionData || {})
+      console.info('Using default questions, keys:', keys)
+      if (keys.length > 0) {
+        this.questions = questionData[keys[0]]
+        this.totalQuestions = this.questions.length
+      }
+    }
+  },
+  goBack() {
+    router.back()
+  },
+  startTest() {
+    this.started = true
+    if (this.questions.length > 0) {
+      this.currentQuestion = this.questions[0]
+    }
+  },
+  selectOption(opt) {
+    this.selectedOption = opt.label
+    
+    // 记录答案
+    const answered = {
+      index: this.currentIndex + 1,
+      question: this.currentQuestion.question,
+      options: this.currentQuestion.options,
+      selectedOption: opt.label,
+      score: opt.score || 0
+    }
+    
+    // 累计分数
+    if (typeof opt.score === 'number') {
+      this.totalScore += opt.score
+    }
+    
+    // 延迟后进入下一题
+    setTimeout(() => {
+      this.answeredQuestions.push(answered)
+      this.currentIndex++
+      this.selectedOption = ''
+      
+      if (this.currentIndex < this.questions.length) {
+        this.currentQuestion = this.questions[this.currentIndex]
+      } else {
+        this.finished = true
+        this.currentQuestion = null
+        this.calculateResult()
+      }
+    }, 500)
+  },
+  calculateResult() {
+    // 根据总分计算结果
+    const maxScore = this.totalQuestions * 2
+    const percentage = this.totalScore / maxScore
+    
+    if (percentage >= 0.75) {
+      this.resultTitle = '极致外向型——社交场上的活力源泉'
+      this.resultContent = '你是典型的外向型人格，精力来源于与他人的互动。社交对你而言不是负担，而是补充能量的方式，无论是大型聚会还是陌生社交场景，你都能快速适应并展现出强大的沟通能力。在团队中，你是天然的带动者，主动发言和积极建议能有效调动团队氛围，推动任务进展。面对压力时，你习惯通过外部活动释放情绪，身边从不缺乏朋友和陪伴。但需注意，过度依赖社交可能会让你忽略内心真实感受，偶尔的独处能帮助你沉淀思绪。在工作中，可充分发挥社交优势拓展资源，但也要学会在团队中倾听他人意见，避免因过于主动而忽视细节。'
+    } else if (percentage >= 0.5) {
+      this.resultTitle = '社交适应型——灵活切换的平衡者'
+      this.resultContent = '你具有良好的社交适应能力，能够在不同场合灵活调整自己的状态。既能享受热闹的聚会，也能安静地独处思考。这种平衡让你在人际交往中游刃有余，既不会因过度社交而疲惫，也不会因过度独处而孤独。建议继续保持这种平衡，根据实际需要调整社交频率。'
+    } else if (percentage >= 0.25) {
+      this.resultTitle = '内敛思考型——深度交流的倾听者'
+      this.resultContent = '你更倾向于内向，喜欢深度的一对一交流而非大型社交活动。独处对你来说是恢复精力的重要方式。你善于倾听和思考，往往能给出深思熟虑的建议。在工作中，你可能更适合需要专注和深度思考的任务。建议在保持舒适区的同时，适当挑战自己参与一些社交活动，拓展人脉资源。'
+    } else {
+      this.resultTitle = '深度内向型——独立思考的智者'
+      this.resultContent = '你是典型的内向型人格，独处是你最舒适的状态。你拥有丰富的内心世界，善于深度思考和自我反省。社交活动对你来说消耗较大，你更喜欢与少数知心好友保持深度联系。在工作中，你适合需要独立完成、深度专注的任务。建议尊重自己的性格特点，同时培养一些必要的社交技能，以应对职场和生活中的社交需求。'
+    }
+  },
+  viewResult() {
+    this.showResult = true
+  },
+  retryTest() {
+    // 重置状态
+    this.started = false
+    this.finished = false
+    this.showResult = false
+    this.currentIndex = 0
+    this.selectedOption = ''
+    this.answeredQuestions = []
+    this.totalScore = 0
+    this.resultTitle = ''
+    this.resultContent = ''
+    
+    if (this.questions.length > 0) {
+      this.currentQuestion = this.questions[0]
+    }
+  },
+  goHome() {
+    router.push({
+      uri: 'pkg_main/pages/Demo'
+    })
+  }
+}
+</script>
+
+<style lang="scss">
+@import './../../assets/styles/style.scss';
+
+.container {
+  flex: 1;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.custom-title-bar {
+  width: 100%;
+  height: 50 * $size-factor;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 15 * $size-factor;
+  margin-top: 30 * $size-factor;
+  z-index: 10;
+}
+
+.back-btn {
+  width: 30 * $size-factor;
+  height: 40 * $size-factor;
+  justify-content: center;
+  align-items: center;
+}
+
+.back-icon {
+  width: 20 * $size-factor;
+  height: 20 * $size-factor;
+  object-fit: contain;
+}
+
+.title-icon {
+  width: 30 * $size-factor;
+  height: 30 * $size-factor;
+  object-fit: contain;
+  margin-left: 5 * $size-factor;
+}
+
+.page-title {
+  font-size: 16 * $size-factor;
+  color: #333333;
+  font-weight: bold;
+  margin-left: 8 * $size-factor;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.chat-list {
+  flex: 1;
+  z-index: 1;
+  padding: 15 * $size-factor;
+}
+
+.chat-item {
+  flex-direction: column;
+}
+
+.placeholder-item {
+  height: 100 * $size-factor;
+}
+
+.bubble-row {
+  flex-direction: row;
+  margin-bottom: 15 * $size-factor;
+}
+
+.bubble-row-left {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.bubble-row-right {
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 36 * $size-factor;
+  height: 36 * $size-factor;
+  border-radius: 18 * $size-factor;
+  object-fit: cover;
+}
+
+.bubble {
+  max-width: 200 * $size-factor;
+  padding: 12 * $size-factor 16 * $size-factor;
+  border-radius: 15 * $size-factor;
+}
+
+.left-bubble {
+  background-color: #ffffff;
+  margin-left: 10 * $size-factor;
+}
+
+.right-bubble {
+  background-color: #00d9c5;
+  margin-right: 10 * $size-factor;
+}
+
+.question-bubble {
+  max-width: 220 * $size-factor;
+}
+
+.bubble-text {
+  font-size: 12 * $size-factor;
+  color: #333333;
+  line-height: 20 * $size-factor;
+}
+
+.bubble-text-white {
+  color: #ffffff;
+}
+
+.progress-row {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 20 * $size-factor;
+  margin-bottom: 8 * $size-factor;
+}
+
+.progress-text {
+  font-size: 14 * $size-factor;
+  color: #00d9c5;
+  font-weight: bold;
+}
+
+.progress-total {
+  font-size: 12 * $size-factor;
+  color: #999999;
+}
+
+.progress-bar-wrap {
+  width: 100%;
+  height: 4 * $size-factor;
+  background-color: #e0e0e0;
+  border-radius: 2 * $size-factor;
+  margin-bottom: 15 * $size-factor;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #00d9c5;
+  border-radius: 2 * $size-factor;
+}
+
+.options-container {
+  flex-direction: column;
+  margin-left: 50 * $size-factor;
+  margin-bottom: 15 * $size-factor;
+}
+
+.option-card {
+  flex-direction: row;
+  background-color: #ffffff;
+  padding: 12 * $size-factor;
+  border-radius: 10 * $size-factor;
+  margin-bottom: 8 * $size-factor;
+  border-width: 1px;
+  border-color: #eeeeee;
+}
+
+.option-card-selected {
+  border-color: #00d9c5;
+  background-color: #e6faf8;
+}
+
+.option-label {
+  font-size: 12 * $size-factor;
+  color: #00d9c5;
+  font-weight: bold;
+  margin-right: 8 * $size-factor;
+}
+
+.option-text {
+  flex: 1;
+  font-size: 12 * $size-factor;
+  color: #333333;
+  line-height: 20 * $size-factor;
+}
+
+.result-container {
+  flex-direction: column;
+  background-color: #ffffff;
+  margin: 15 * $size-factor;
+  margin-left: 50 * $size-factor;
+  padding: 20 * $size-factor;
+  border-radius: 15 * $size-factor;
+}
+
+.result-title {
+  font-size: 16 * $size-factor;
+  color: #333333;
+  font-weight: bold;
+  margin-bottom: 15 * $size-factor;
+}
+
+.result-content {
+  font-size: 13 * $size-factor;
+  color: #666666;
+  line-height: 22 * $size-factor;
+  text-align: justify;
+}
+
+.bottom-btn-wrap {
+  width: 100%;
+  padding: 20 * $size-factor;
+  z-index: 10;
+}
+
+.bottom-btn-wrap-row {
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.action-btn {
+  flex: 1;
+  height: 50 * $size-factor;
+  background-color: #00d9c5;
+  border-radius: 25 * $size-factor;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+}
+
+.result-action-btn {
+  height: 54 * $size-factor;
+  border-radius: 27 * $size-factor;
+}
+
+.action-btn-secondary {
+  background-color: #FF55CC;
+  margin-right: 12 * $size-factor;
+}
+
+.action-btn-primary {
+  margin-left: 12 * $size-factor;
+}
+
+.btn-icon {
+  width: 20 * $size-factor;
+  height: 20 * $size-factor;
+  margin-right: 8 * $size-factor;
+}
+
+.btn-text {
+  font-size: 16 * $size-factor;
+  color: #ffffff;
+  font-weight: bold;
+}
+</style>

@@ -1,0 +1,144 @@
+<template>
+  <div class="container">
+    <!-- 全屏背景图 -->
+    <image class="bg-img" src="/pkg_main/assets/imgs/shouye-bg.png"></image>
+    
+    <!-- 自定义导航栏 -->
+    <div class="custom-title-bar">
+      <div class="back-btn" onclick="goBack">
+        <image class="back-icon" src="/pkg_main/assets/imgs/back.png"></image>
+      </div>
+      <text class="page-title">{{title}}</text>
+    </div>
+    
+    <scroll class="scroll-view">
+      <div class="content-wrapper">
+        <!-- 卡通图片区域 -->
+        <div class="zan-wrapper">
+          <image class="zan-img" src="/pkg_main/assets/imgs/zan.png"></image>
+        </div>
+        
+        <!-- 文字内容容器，使用负margin实现叠加效果 -->
+        <div class="text-container">
+          <text class="article-content">{{content}}</text>
+        </div>
+      </div>
+    </scroll>
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+
+export default {
+  protected: {
+    id: 0,
+    title: '',
+    content: '',
+    views: 0
+  },
+  onInit() {
+    // 由于自定义标题栏，不需要调用 setTitleBar
+  },
+  goBack() {
+    router.back()
+  }
+}
+</script>
+
+<style lang="scss">
+@import './../../assets/styles/style.scss';
+
+.container {
+  flex: 1;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.custom-title-bar {
+  width: 100%;
+  height: 50 * $size-factor;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 15 * $size-factor;
+  margin-top: 30 * $size-factor; /* 避开状态栏高度 */
+  z-index: 10; /* 确保在最上层 */
+}
+
+.back-btn {
+  width: 40 * $size-factor;
+  height: 40 * $size-factor;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.back-icon {
+  width: 24 * $size-factor;
+  height: 24 * $size-factor;
+  object-fit: contain;
+}
+
+.page-title {
+  flex: 1;
+  font-size: 18 * $size-factor;
+  color: #333333;
+  font-weight: bold;
+  text-align: center;
+  margin-right: 40 * $size-factor; /* 平衡左侧返回按钮宽度 */
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.scroll-view {
+  flex: 1;
+  z-index: 1;
+}
+
+.content-wrapper {
+  flex-direction: column;
+  padding: 15 * $size-factor;
+  padding-top: 10 * $size-factor; /* 减少顶部留白，因为有标题栏 */
+}
+
+.zan-wrapper {
+  width: 100%;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding-right: 10 * $size-factor;
+}
+
+.zan-img {
+  width: 160 * $size-factor;
+  height: 160 * $size-factor;
+  object-fit: contain;
+}
+
+.text-container {
+  width: 100%;
+  flex-direction: column;
+  padding: 20 * $size-factor;
+  margin-top: -40 * $size-factor; /* 负margin实现叠加效果 */
+  background-color: rgba(255, 255, 255, 0.7);
+  border-top-left-radius: 20 * $size-factor;
+  border-top-right-radius: 20 * $size-factor;
+  backdrop-filter: blur(20px);
+  min-height: 400 * $size-factor; /* 确保有足够高度 */
+}
+
+.article-content {
+  font-size: 14 * $size-factor;
+  color: #333333;
+  line-height: 24 * $size-factor;
+  text-align: justify;
+}
+</style>

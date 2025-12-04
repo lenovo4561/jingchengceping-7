@@ -1,0 +1,227 @@
+<template>
+  <div class="container">
+    <!-- 背景图 -->
+    <image class="bg-image" src="/pkg_main/assets/imgs/shouye-bg.png"></image>
+    
+    <!-- 内容区域 -->
+    <div class="content-wrap">
+      <!-- 顶部 Banner (包含Logo和文案) -->
+      <image class="banner" src="/pkg_main/assets/imgs/banner.png"></image>
+      
+      <!-- 分类 Tab 栏 -->
+      <div class="tab-bar">
+        <div class="tab-item {{currentType === 'xingge' ? 'active-tab' : ''}}" onclick="switchTab('xingge')">
+          <text class="tab-text {{currentType === 'xingge' ? 'active-text' : ''}}">性格</text>
+        </div>
+        <div class="tab-item {{currentType === 'qinggan' ? 'active-tab' : ''}}" onclick="switchTab('qinggan')">
+          <text class="tab-text {{currentType === 'qinggan' ? 'active-text' : ''}}">情感</text>
+        </div>
+        <div class="tab-item {{currentType === 'shiye' ? 'active-tab' : ''}}" onclick="switchTab('shiye')">
+          <text class="tab-text {{currentType === 'shiye' ? 'active-text' : ''}}">事业</text>
+        </div>
+        <div class="tab-item {{currentType === 'quwei' ? 'active-tab' : ''}}" onclick="switchTab('quwei')">
+          <text class="tab-text {{currentType === 'quwei' ? 'active-text' : ''}}">趣味</text>
+        </div>
+      </div>
+
+      <!-- 测评列表 -->
+      <list class="list-container">
+        <list-item type="ceping" class="list-item" for="{{item in listData}}">
+          <image class="item-img" src="{{item.img}}"></image>
+          <div class="item-info">
+            <text class="item-title">{{item.title}}</text>
+            <div class="tag-wrap">
+              <text class="tag-text">{{item.tag}}</text>
+            </div>
+            <div class="bottom-info">
+              <text class="count-text">{{item.count}} 人在测试</text>
+              <input type="button" class="go-btn" value="去测试" onclick="startTest(item)"></input>
+            </div>
+          </div>
+        </list-item>
+        <!-- 底部留白 -->
+        <list-item type="placeholder" class="placeholder-item"></list-item>
+      </list>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+import { cepingData } from './../../../helper/ceping_data.js'
+
+export default {
+  props: ['show'],
+  data() {
+    return {
+      currentType: 'xingge',
+      listData: []
+    }
+  },
+  onInit() {
+    this.updateList()
+  },
+  switchTab(type) {
+    this.currentType = type
+    this.updateList()
+  },
+  updateList() {
+    this.listData = cepingData[this.currentType] || []
+  },
+  startTest(item) {
+    router.push({
+      uri: 'pkg_main/pages/CepingIntro',
+      params: {
+        id: item.id,
+        title: item.title,
+        tag: item.tag,
+        type: this.currentType
+      }
+    })
+  }
+}
+</script>
+
+<style lang="scss">
+@import './../../../assets/styles/style.scss';
+
+.container {
+  flex: 1;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.content-wrap {
+  flex: 1;
+  flex-direction: column;
+  padding: 0 10 * $size-factor;
+}
+
+.banner {
+  width: 100%;
+  height: 160 * $size-factor;
+  object-fit: contain;
+  margin-bottom: 5 * $size-factor;
+}
+
+.tab-bar {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 20 * $size-factor;
+  padding: 3 * $size-factor;
+  margin-bottom: 10 * $size-factor;
+  height: 40 * $size-factor;
+  z-index: 1;
+}
+
+.tab-item {
+  flex: 1;
+  height: 34 * $size-factor;
+  justify-content: center;
+  align-items: center;
+  border-radius: 17 * $size-factor;
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.active-tab {
+  background-color: #000000;
+}
+
+.tab-text {
+  font-size: 14 * $size-factor;
+  color: #666666;
+}
+
+.active-text {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.list-container {
+  flex: 1;
+  flex-direction: column;
+}
+
+.list-item {
+  flex-direction: row;
+  background-color: #ffffff;
+  margin-bottom: 8 * $size-factor;
+  padding: 8 * $size-factor;
+  border-radius: 10 * $size-factor;
+}
+
+.item-img {
+  width: 64 * $size-factor;
+  height: 64 * $size-factor;
+  border-radius: 8 * $size-factor;
+  object-fit: cover;
+  background-color: #eeeeee;
+  flex-shrink: 0;
+}
+
+.item-info {
+  flex: 1;
+  flex-direction: column;
+  margin-left: 10 * $size-factor;
+  justify-content: space-between;
+  height: 64 * $size-factor;
+}
+
+.item-title {
+  font-size: 14 * $size-factor;
+  color: #000000;
+  font-weight: bold;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.tag-wrap {
+  background-color: #e0f7fa;
+  padding: 2 * $size-factor 6 * $size-factor;
+  border-radius: 4 * $size-factor;
+  align-self: flex-start;
+  margin-top: 2 * $size-factor;
+}
+
+.tag-text {
+  font-size: 10 * $size-factor;
+  color: #00bcd4;
+}
+
+.bottom-info {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4 * $size-factor;
+}
+
+.count-text {
+  font-size: 10 * $size-factor;
+  color: #999999;
+}
+
+.go-btn {
+  width: 60 * $size-factor;
+  height: 24 * $size-factor;
+  border-radius: 12 * $size-factor;
+  background-color: #000000;
+  color: #ffffff;
+  font-size: 10 * $size-factor;
+}
+
+.placeholder-item {
+  height: 40 * $size-factor;
+}
+</style>
